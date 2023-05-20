@@ -86,6 +86,10 @@ signals:
 
     void swapScreensToggle();
 
+    void hkCursorPress();
+    void hkCursorRelease();
+    void hkCursorMove(bool pressed);
+
 private:
     void drawScreenGL();
     void initOpenGL();
@@ -330,6 +334,10 @@ private slots:
     void onUpdateVideoSettings(bool glchange);
 
     void onFullscreenToggled();
+
+    void onCursorPress();
+    void onCursorRelease();
+    void onCursorMove(bool pressed);
 
 private:
     void closeEvent(QCloseEvent* event);

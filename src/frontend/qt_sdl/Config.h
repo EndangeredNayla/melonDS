@@ -35,6 +35,11 @@ enum
     HK_SolarSensorDecrease,
     HK_SolarSensorIncrease,
     HK_FrameStep,
+    HK_CursorLeft,
+    HK_CursorRight,
+    HK_CursorUp,
+    HK_CursorDown,
+    HK_CursorPress,
     HK_MAX
 };
 
@@ -184,6 +189,9 @@ extern int DSiBatteryLevel;
 extern bool DSiBatteryCharging;
 
 extern CameraConfig Camera[2];
+  
+extern int EnableCursor;
+extern int CursorSpeed;
 
 
 void Load();

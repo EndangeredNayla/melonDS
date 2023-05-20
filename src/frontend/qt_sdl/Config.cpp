@@ -141,6 +141,8 @@ int DSiBatteryLevel;
 bool DSiBatteryCharging;
 
 CameraConfig Camera[2];
+int EnableCursor;
+int CursorSpeed;
 
 
 const char* kConfigFile = "melonDS.ini";
@@ -197,6 +199,11 @@ ConfigEntry ConfigFile[] =
     {"HKJoy_SolarSensorDecrease", 0, &HKJoyMapping[HK_SolarSensorDecrease], -1, true},
     {"HKJoy_SolarSensorIncrease", 0, &HKJoyMapping[HK_SolarSensorIncrease], -1, true},
     {"HKJoy_FrameStep",           0, &HKJoyMapping[HK_FrameStep],           -1, true},
+    {"HKJoy_CursorLeft",          0, &HKJoyMapping[HK_CursorLeft],          -1, true},
+    {"HKJoy_CursorRight",         0, &HKJoyMapping[HK_CursorRight],         -1, true},
+    {"HKJoy_CursorUp",            0, &HKJoyMapping[HK_CursorUp],            -1, true},
+    {"HKJoy_CursorDown",          0, &HKJoyMapping[HK_CursorDown],          -1, true},
+    {"HKJoy_CursorPress",         0, &HKJoyMapping[HK_CursorPress],         -1, true},
 
     {"JoystickID", 0, &JoystickID, 0, true},
 
@@ -225,6 +232,7 @@ ConfigEntry ConfigFile[] =
     {"GL_BetterPolygons", 1, &GL_BetterPolygons, false, false},
 
     {"LimitFPS", 1, &LimitFPS, true, false},
+
     {"AudioSync", 1, &AudioSync, false},
     {"ShowOSD", 1, &ShowOSD, true, false},
 
