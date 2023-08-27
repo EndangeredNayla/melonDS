@@ -120,12 +120,15 @@ private:
         const std::initializer_list<const char*>& labels,
         int* keymap, int* joymap);
     void setupKeypadPage();
+    void setupCursorPage();
 
     Ui::InputConfigDialog* ui;
 
     int keypadKeyMap[12], keypadJoyMap[12];
     int addonsKeyMap[hk_addons.size()], addonsJoyMap[hk_addons.size()];
     int hkGeneralKeyMap[hk_general.size()], hkGeneralJoyMap[hk_general.size()];
+    int hkCursorKeyMap[5],  hkCursorJoyMap[5];
+
 };
 
 
