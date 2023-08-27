@@ -195,6 +195,9 @@ EmuThread::EmuThread(QObject* parent) : QThread(parent)
     connect(this, SIGNAL(windowFullscreenToggle()), mainWindow, SLOT(onFullscreenToggled()));
     connect(this, SIGNAL(swapScreensToggle()), mainWindow->actScreenSwap, SLOT(trigger()));
     connect(this, SIGNAL(screenEmphasisToggle()), mainWindow, SLOT(onScreenEmphasisToggled()));
+    connect(this, SIGNAL(hkCursorPress()), mainWindow, SLOT(onCursorPress()));
+    connect(this, SIGNAL(hkCursorRelease()), mainWindow, SLOT(onCursorRelease()));
+    connect(this, SIGNAL(hkCursorMove(bool)), mainWindow, SLOT(onCursorMove(bool)));
 
     static_cast<ScreenPanelGL*>(mainWindow->panel)->transferLayout(this);
 }
@@ -607,6 +610,38 @@ void EmuThread::run()
                 else
                     sprintf(melontitle, "[%d/%.0f] melonDS (%d)", fps, fpstarget, inst+1);
                 changeWindowTitle(melontitle);
+            }
+
+
+            if (Config::EnableCursor && mainWindow->panelWidget->isVisible())
+            {
+                if (Input::HotkeyPressed(HK_CursorPress)) emit hkCursorPress();
+                if (Input::HotkeyReleased(HK_CursorPress)) emit hkCursorRelease();
+
+                if (Input::HotkeyDown(HK_CursorLeft)
+                    || Input::HotkeyDown(HK_CursorRight)
+                    || Input::HotkeyDown(HK_CursorUp)
+                    || Input::HotkeyDown(HK_CursorDown))
+                {
+                    QCursor cursor = mainWindow->panelWidget->cursor();
+                    QPoint position = mainWindow->mapFromGlobal(cursor.pos());
+                    QRect geom = mainWindow->panelWidget->geometry();
+
+                    if (Input::HotkeyDown(HK_CursorLeft)) position.rx() -= Config::CursorSpeed;
+                    if (Input::HotkeyDown(HK_CursorRight)) position.rx() += Config::CursorSpeed;
+                    if (Input::HotkeyDown(HK_CursorUp)) position.ry() -= Config::CursorSpeed;
+                    if (Input::HotkeyDown(HK_CursorDown)) position.ry() += Config::CursorSpeed;
+
+                    position.setX(std::clamp(position.x(), geom.x(), geom.right()));
+                    position.setY(std::clamp(position.y(), geom.y(), geom.bottom()));
+
+                    cursor.setPos(mainWindow->mapToGlobal(position));
+                    mainWindow->panelWidget->setCursor(cursor);
+
+                    emit hkCursorMove(Input::HotkeyDown(HK_CursorPress));
+                }
+
+
             }
         }
         else

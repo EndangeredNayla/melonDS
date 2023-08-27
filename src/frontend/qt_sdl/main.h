@@ -89,6 +89,10 @@ signals:
 
     void syncVolumeLevel();
 
+    void hkCursorPress();
+    void hkCursorRelease();
+    void hkCursorMove(bool pressed);
+
 private:
     void drawScreenGL();
     void initOpenGL();
@@ -334,6 +338,9 @@ private slots:
     void onUpdateVideoSettings(bool glchange);
 
     void onFullscreenToggled();
+    void onCursorPress();
+    void onCursorRelease();
+    void onCursorMove(bool pressed);
     void onScreenEmphasisToggled();
 
 private:

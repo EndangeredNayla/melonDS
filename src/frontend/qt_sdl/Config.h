@@ -39,7 +39,12 @@ enum
     HK_PowerButton,
     HK_VolumeUp,
     HK_VolumeDown,
-    HK_MAX
+    HK_MAX,
+    HK_CursorLeft,
+    HK_CursorRight,
+    HK_CursorUp,
+    HK_CursorDown,
+    HK_CursorPress,
 };
 
 enum
@@ -154,6 +159,9 @@ extern int DSiSDSize;
 extern bool DSiSDReadOnly;
 extern bool DSiSDFolderSync;
 extern std::string DSiSDFolderPath;
+
+extern int EnableCursor;
+extern int CursorSpeed;
 
 extern bool FirmwareOverrideSettings;
 extern std::string FirmwareUsername;

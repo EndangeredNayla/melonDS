@@ -137,6 +137,9 @@ bool EnableCheats;
 bool MouseHide;
 int MouseHideSeconds;
 
+int EnableCursor;
+int CursorSpeed;
+
 bool PauseLostFocus;
 
 bool DSBatteryLevelOkay;
@@ -191,6 +194,11 @@ ConfigEntry ConfigFile[] =
     {"HKKey_SolarSensorDecrease", 0, &HKKeyMapping[HK_SolarSensorDecrease], -1, true},
     {"HKKey_SolarSensorIncrease", 0, &HKKeyMapping[HK_SolarSensorIncrease], -1, true},
     {"HKKey_FrameStep",           0, &HKKeyMapping[HK_FrameStep],           -1, true},
+    {"HKKey_CursorLeft",          0, &HKKeyMapping[HK_CursorLeft],          -1, true},
+    {"HKKey_CursorRight",         0, &HKKeyMapping[HK_CursorRight],         -1, true},
+    {"HKKey_CursorUp",            0, &HKKeyMapping[HK_CursorUp],            -1, true},
+    {"HKKey_CursorDown",          0, &HKKeyMapping[HK_CursorDown],          -1, true},
+    {"HKKey_CursorPress",         0, &HKKeyMapping[HK_CursorPress],         -1, true},
     {"HKKey_PowerButton",         0, &HKKeyMapping[HK_PowerButton],         -1, true},
     {"HKKey_VolumeUp",            0, &HKKeyMapping[HK_VolumeUp],            -1, true},
     {"HKKey_VolumeDown",          0, &HKKeyMapping[HK_VolumeDown],          -1, true},
@@ -210,6 +218,14 @@ ConfigEntry ConfigFile[] =
     {"HKJoy_PowerButton",         0, &HKJoyMapping[HK_PowerButton],         -1, true},
     {"HKJoy_VolumeUp",            0, &HKJoyMapping[HK_VolumeUp],            -1, true},
     {"HKJoy_VolumeDown",          0, &HKJoyMapping[HK_VolumeDown],          -1, true},
+    {"HKJoy_CursorLeft",          0, &HKJoyMapping[HK_CursorLeft],          -1, true},
+    {"HKJoy_CursorRight",         0, &HKJoyMapping[HK_CursorRight],         -1, true},
+    {"HKJoy_CursorUp",            0, &HKJoyMapping[HK_CursorUp],            -1, true},
+    {"HKJoy_CursorDown",          0, &HKJoyMapping[HK_CursorDown],          -1, true},
+    {"HKJoy_CursorPress",         0, &HKJoyMapping[HK_CursorPress],         -1, true},
+
+    {"EnableCursor", 0, &EnableCursor, 0, true},
+    {"CursorSpeed", 0, &CursorSpeed, 5, true},
 
     {"JoystickID", 0, &JoystickID, 0, true},
 
