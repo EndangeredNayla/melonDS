@@ -49,17 +49,6 @@ enum
 
 enum
 {
-    screenSizing_Even,
-    screenSizing_EmphTop,
-    screenSizing_EmphBot,
-    screenSizing_Auto,
-    screenSizing_TopOnly,
-    screenSizing_BotOnly,
-    screenSizing_MAX,
-};
-
-enum
-{
     micInputType_Silence,
     micInputType_External,
     micInputType_Noise,
@@ -171,6 +160,7 @@ extern int FirmwareBirthdayDay;
 extern int FirmwareFavouriteColour;
 extern std::string FirmwareMessage;
 extern std::string FirmwareMAC;
+extern std::string WifiSettingsPath;
 
 extern int MPAudioMode;
 extern int MPRecvTimeout;

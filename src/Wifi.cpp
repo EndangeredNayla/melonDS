@@ -23,8 +23,6 @@
 #include "Wifi.h"
 #include "WifiAP.h"
 #include "Platform.h"
-#include "ARM.h"
-#include "GPU.h"
 
 using Platform::Log;
 using Platform::LogLevel;
@@ -114,6 +112,7 @@ bool IsMP;
 bool IsMPClient;
 u64 NextSync;           // for clients: timestamp for next sync point
 u64 RXTimestamp;
+u64 LastHostRXCheck;
 
 // multiplayer host TX sequence:
 // 1. preamble
@@ -152,11 +151,7 @@ u64 RXTimestamp;
 
 bool Init()
 {
-    //MPInited = false;
     //LANInited = false;
-
-    Platform::MP_Init();
-    MPInited = true;
 
     Platform::LAN_Init();
     LANInited = true;
@@ -168,8 +163,6 @@ bool Init()
 
 void DeInit()
 {
-    if (MPInited)
-        Platform::MP_DeInit();
     if (LANInited)
         Platform::LAN_DeInit();
 
@@ -272,6 +265,7 @@ void Reset()
     IsMPClient = false;
     NextSync = 0;
     RXTimestamp = 0;
+    LastHostRXCheck = 0;
 
     WifiAP::Reset();
 }
@@ -348,6 +342,7 @@ void DoSavestate(Savestate* file)
     file->Bool32(&IsMPClient);
     file->Var64(&NextSync);
     file->Var64(&RXTimestamp);
+    file->Var64(&LastHostRXCheck);
 }
 
 
@@ -385,7 +380,7 @@ void UpdatePowerOn()
     PowerOn = on;
     if (on)
     {
-        Log(LogLevel::Info, "WIFI: ON\n");
+        Log(LogLevel::Debug, "WIFI: ON\n");
 
         ScheduleTimer(true);
 
@@ -393,7 +388,7 @@ void UpdatePowerOn()
     }
     else
     {
-        Log(LogLevel::Info, "WIFI: OFF\n");
+        Log(LogLevel::Debug, "WIFI: OFF\n");
 
         NDS::CancelEvent(NDS::Event_Wifi);
 
@@ -1666,8 +1661,12 @@ void USTimer(u32 param)
 
         if (USTimestamp >= NextSync)
         {
-            // TODO: not do this every tick if it fails to receive a frame!
-            CheckRX(2);
+            u64 delay = USTimestamp - LastHostRXCheck;
+            if (delay >= 512)
+            {
+                CheckRX(2);
+                LastHostRXCheck = USTimestamp;
+            }
         }
     }
 

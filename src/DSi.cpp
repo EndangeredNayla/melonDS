@@ -43,8 +43,7 @@
 
 #include "tiny-AES-c/aes.hpp"
 
-using Platform::Log;
-using Platform::LogLevel;
+using namespace Platform;
 
 namespace DSi
 {
@@ -56,8 +55,8 @@ u32 SCFG_EXT[2];
 u32 SCFG_MC;
 u16 SCFG_RST;
 
-u8 ARM9iBIOS[0x10000];
-u8 ARM7iBIOS[0x10000];
+u8 ARM9iBIOS[0x10000] = { 0 };
+u8 ARM7iBIOS[0x10000] = { 0 };
 
 u32 MBK[2][9];
 
@@ -325,8 +324,8 @@ void DecryptModcryptArea(u32 offset, u32 size, u8* iv)
         DSi_AES::DeriveNormalKey(keyX, keyY, tmp);
     }
 
-    DSi_AES::Swap16(key, tmp);
-    DSi_AES::Swap16(tmp, iv);
+    Bswap128(key, tmp);
+    Bswap128(tmp, iv);
     AES_init_ctx_iv(&ctx, key, tmp);
 
     // find a matching binary area
@@ -368,21 +367,21 @@ void DecryptModcryptArea(u32 offset, u32 size, u8* iv)
 
     for (u32 i = 0; i < size; i+=16)
     {
-        u8 data[16];
+        u32 data[4];
 
-        *(u32*)&data[0] = ARM9Read32(binaryaddr+i);
-        *(u32*)&data[4] = ARM9Read32(binaryaddr+i+4);
-        *(u32*)&data[8] = ARM9Read32(binaryaddr+i+8);
-        *(u32*)&data[12] = ARM9Read32(binaryaddr+i+12);
+        data[0] = ARM9Read32(binaryaddr+i);
+        data[1] = ARM9Read32(binaryaddr+i+4);
+        data[2] = ARM9Read32(binaryaddr+i+8);
+        data[3] = ARM9Read32(binaryaddr+i+12);
 
-        DSi_AES::Swap16(tmp, data);
-        AES_CTR_xcrypt_buffer(&ctx, tmp, 16);
-        DSi_AES::Swap16(data, tmp);
+        Bswap128(tmp, data);
+        AES_CTR_xcrypt_buffer(&ctx, tmp, sizeof(tmp));
+        Bswap128(data, tmp);
 
-        ARM9Write32(binaryaddr+i, *(u32*)&data[0]);
-        ARM9Write32(binaryaddr+i+4, *(u32*)&data[4]);
-        ARM9Write32(binaryaddr+i+8, *(u32*)&data[8]);
-        ARM9Write32(binaryaddr+i+12, *(u32*)&data[12]);
+        ARM9Write32(binaryaddr+i,    data[0]);
+        ARM9Write32(binaryaddr+i+4,  data[1]);
+        ARM9Write32(binaryaddr+i+8,  data[2]);
+        ARM9Write32(binaryaddr+i+12, data[3]);
     }
 }
 
@@ -719,13 +718,13 @@ void SoftReset()
 
 bool LoadBIOS()
 {
-    FILE* f;
+    Platform::FileHandle* f;
     u32 i;
 
     memset(ARM9iBIOS, 0, 0x10000);
     memset(ARM7iBIOS, 0, 0x10000);
 
-    f = Platform::OpenLocalFile(Platform::GetConfigString(Platform::DSi_BIOS9Path), "rb");
+    f = Platform::OpenLocalFile(Platform::GetConfigString(Platform::DSi_BIOS9Path), FileMode::Read);
     if (!f)
     {
         Log(LogLevel::Warn, "ARM9i BIOS not found\n");
@@ -735,14 +734,14 @@ bool LoadBIOS()
     }
     else
     {
-        fseek(f, 0, SEEK_SET);
-        fread(ARM9iBIOS, 0x10000, 1, f);
+        FileRewind(f);
+        FileRead(ARM9iBIOS, 0x10000, 1, f);
 
         Log(LogLevel::Info, "ARM9i BIOS loaded\n");
-        fclose(f);
+        Platform::CloseFile(f);
     }
 
-    f = Platform::OpenLocalFile(Platform::GetConfigString(Platform::DSi_BIOS7Path), "rb");
+    f = Platform::OpenLocalFile(Platform::GetConfigString(Platform::DSi_BIOS7Path), FileMode::Read);
     if (!f)
     {
         Log(LogLevel::Warn, "ARM7i BIOS not found\n");
@@ -754,11 +753,11 @@ bool LoadBIOS()
     {
         // TODO: check if the first 32 bytes are crapoed
 
-        fseek(f, 0, SEEK_SET);
-        fread(ARM7iBIOS, 0x10000, 1, f);
+        FileRewind(f);
+        FileRead(ARM7iBIOS, 0x10000, 1, f);
 
         Log(LogLevel::Info, "ARM7i BIOS loaded\n");
-        fclose(f);
+        CloseFile(f);
     }
 
     if (!Platform::GetConfigBool(Platform::DSi_FullBIOSBoot))
@@ -785,7 +784,7 @@ bool LoadNAND()
         return false;
     }
 
-    FILE* nand = DSi_NAND::GetFile();
+    FileHandle* nand = DSi_NAND::GetFile();
 
     // Make sure NWRAM is accessible.
     // The Bits are set to the startup values in Reset() and we might
@@ -829,8 +828,8 @@ bool LoadNAND()
     }
     else
     {
-        fseek(nand, 0x220, SEEK_SET);
-        fread(bootparams, 4, 8, nand);
+        FileSeek(nand, 0x220, FileSeekOrigin::Start);
+        FileRead(bootparams, 4, 8, nand);
 
         Log(LogLevel::Debug, "ARM9: offset=%08X size=%08X RAM=%08X size_aligned=%08X\n",
                bootparams[0], bootparams[1], bootparams[2], bootparams[3]);
@@ -843,8 +842,8 @@ bool LoadNAND()
         MBK[1][8] = 0;
 
         u32 mbk[12];
-        fseek(nand, 0x380, SEEK_SET);
-        fread(mbk, 4, 12, nand);
+        FileSeek(nand, 0x380, FileSeekOrigin::Start);
+        FileRead(mbk, 4, 12, nand);
 
         MapNWRAM_A(0, mbk[0] & 0xFF);
         MapNWRAM_A(1, (mbk[0] >> 8) & 0xFF);
@@ -894,50 +893,50 @@ bool LoadNAND()
         *(u32*)&tmp[4] = -bootparams[3];
         *(u32*)&tmp[8] = ~bootparams[3];
         *(u32*)&tmp[12] = 0;
-        for (int i = 0; i < 16; i++) boot2iv[i] = tmp[15-i];
+        Bswap128(boot2iv, tmp);
 
         AES_init_ctx_iv(&ctx, boot2key, boot2iv);
 
-        fseek(nand, bootparams[0], SEEK_SET);
+        FileSeek(nand, bootparams[0], FileSeekOrigin::Start);
         dstaddr = bootparams[2];
         for (u32 i = 0; i < bootparams[3]; i += 16)
         {
-            u8 data[16];
-            fread(data, 16, 1, nand);
+            u32 data[4];
+            FileRead(data, 16, 1, nand);
 
-            for (int j = 0; j < 16; j++) tmp[j] = data[15-j];
+            Bswap128(tmp, data);
             AES_CTR_xcrypt_buffer(&ctx, tmp, 16);
-            for (int j = 0; j < 16; j++) data[j] = tmp[15-j];
+            Bswap128(data, tmp);
 
-            ARM9Write32(dstaddr, *(u32*)&data[0]); dstaddr += 4;
-            ARM9Write32(dstaddr, *(u32*)&data[4]); dstaddr += 4;
-            ARM9Write32(dstaddr, *(u32*)&data[8]); dstaddr += 4;
-            ARM9Write32(dstaddr, *(u32*)&data[12]); dstaddr += 4;
+            ARM9Write32(dstaddr, data[0]); dstaddr += 4;
+            ARM9Write32(dstaddr, data[1]); dstaddr += 4;
+            ARM9Write32(dstaddr, data[2]); dstaddr += 4;
+            ARM9Write32(dstaddr, data[3]); dstaddr += 4;
         }
 
         *(u32*)&tmp[0] = bootparams[7];
         *(u32*)&tmp[4] = -bootparams[7];
         *(u32*)&tmp[8] = ~bootparams[7];
         *(u32*)&tmp[12] = 0;
-        for (int i = 0; i < 16; i++) boot2iv[i] = tmp[15-i];
+        Bswap128(boot2iv, tmp);
 
         AES_init_ctx_iv(&ctx, boot2key, boot2iv);
 
-        fseek(nand, bootparams[4], SEEK_SET);
+        FileSeek(nand, bootparams[4], FileSeekOrigin::Start);
         dstaddr = bootparams[6];
         for (u32 i = 0; i < bootparams[7]; i += 16)
         {
-            u8 data[16];
-            fread(data, 16, 1, nand);
+            u32 data[4];
+            FileRead(data, 16, 1, nand);
 
-            for (int j = 0; j < 16; j++) tmp[j] = data[15-j];
+            Bswap128(tmp, data);
             AES_CTR_xcrypt_buffer(&ctx, tmp, 16);
-            for (int j = 0; j < 16; j++) data[j] = tmp[15-j];
+            Bswap128(data, tmp);
 
-            ARM7Write32(dstaddr, *(u32*)&data[0]); dstaddr += 4;
-            ARM7Write32(dstaddr, *(u32*)&data[4]); dstaddr += 4;
-            ARM7Write32(dstaddr, *(u32*)&data[8]); dstaddr += 4;
-            ARM7Write32(dstaddr, *(u32*)&data[12]); dstaddr += 4;
+            ARM7Write32(dstaddr, data[0]); dstaddr += 4;
+            ARM7Write32(dstaddr, data[1]); dstaddr += 4;
+            ARM7Write32(dstaddr, data[2]); dstaddr += 4;
+            ARM7Write32(dstaddr, data[3]); dstaddr += 4;
         }
     }
 
